@@ -83,6 +83,7 @@ class ImageSorter:
             self.resample_method = Image.Resampling.LANCZOS
         except AttributeError:
             self.resample_method = Image.ANTIALIAS
+        self.label_cache = {}  # 缓存已生成的四图拼接图
 
         # 先显示选择图片界面
         if self.image_files:
@@ -200,21 +201,59 @@ class ImageSorter:
             return
 
         img_path = self.image_files[self.index]
-        self.img = Image.open(img_path)
+        # 优先从缓存读取
+        if img_path in self.label_cache:
+            new_img = self.label_cache[img_path]
+        else:
+            # 批量处理当前段（每段10张）
+            seg_size = 10
+            seg_start = (self.index // seg_size) * seg_size
+            seg_end = min(seg_start + seg_size, len(self.image_files))
+            for i in range(seg_start, seg_end):
+                path = self.image_files[i]
+                if path in self.label_cache:
+                    continue
+                try:
+                    big_img = Image.open(path).convert('RGB')
+                    w, h = big_img.size
+                    part_w = w // 3
+                    orig_img = big_img.crop((0, 0, part_w, h))
+                    mask_img = big_img.crop((part_w, 0, part_w * 2, h)).convert('L')
+                    crop_img = big_img.crop((part_w * 2, 0, w, h))
+                    label_img = orig_img.copy()
+                    red = Image.new('RGB', orig_img.size, (255,0,0))
+                    label_img = Image.composite(red, label_img, mask_img.point(lambda x: 128 if x > 30 else 0))
+                    imgs = [orig_img, mask_img.convert('RGB'), label_img, crop_img]
+                    total_w = sum(im.width for im in imgs)
+                    max_h = max(im.height for im in imgs)
+                    seg_img = Image.new('RGB', (total_w, max_h), (0,0,0))
+                    x = 0
+                    for im in imgs:
+                        seg_img.paste(im, (x, 0))
+                        x += im.width
+                    self.label_cache[path] = seg_img
+                except Exception as e:
+                    self.label_cache[path] = None
+            new_img = self.label_cache.get(img_path)
+            if new_img is None:
+                self.canvas.delete('all')
+                self.status_label.config(text=f"图片加载失败: {img_path}")
+                return
+        self.img = new_img
         self.offset_x = 0
         self.offset_y = 0
         self.render_image()
         done = self.total_count - len(self.image_files) + self.index + 1
-        self.status_label.config(text=f"当前图片：{img_path} (已分 {done}/{self.total_count}) - 快捷键：1清洗 2保留 3阴影 4遮挡  Z撤销  滚轮/Ctrl +/Ctrl -(缩放)")
+        self.status_label.config(text=f"当前图片：{img_path} (已分 {done}/{self.total_count}) - 快捷键：1清洗 2保留 3阴影 4遮挡  滚轮/Ctrl +/Ctrl -(缩放)")
 
-    def render_image(self):
+    def render_image(self, force_new_img=True):
         if self.img is None:
             return
         w = self.canvas.winfo_width()
         h = self.canvas.winfo_height()
         # 如果窗口未布局好，延迟重绘，保证图片居中
         if w < 100 or h < 100:
-            self.root.after(50, self.render_image)
+            self.root.after(50, lambda: self.render_image(force_new_img))
             return
         img_w, img_h = self.img.size
         scale = self.scale
@@ -222,13 +261,19 @@ class ImageSorter:
         max_h = int(h * scale)
         ratio = min(max_w / img_w, max_h / img_h, 1.0 * scale)
         new_size = (max(1, int(img_w * ratio)), max(1, int(img_h * ratio)))
-        img_resized = self.img.resize(new_size, self.resample_method)
-        self.tk_img = ImageTk.PhotoImage(img_resized)
-        self.canvas.delete('all')
-        # 计算中心点+偏移
-        cx = w // 2 + self.offset_x
-        cy = h // 2 + self.offset_y
-        self.canvas_img = self.canvas.create_image(cx, cy, image=self.tk_img)
+        if force_new_img or self.tk_img is None or self.tk_img.width() != new_size[0] or self.tk_img.height() != new_size[1]:
+            img_resized = self.img.resize(new_size, self.resample_method)
+            self.tk_img = ImageTk.PhotoImage(img_resized)
+            self.canvas.delete('all')
+            # 计算中心点+偏移
+            cx = w // 2 + self.offset_x
+            cy = h // 2 + self.offset_y
+            self.canvas_img = self.canvas.create_image(cx, cy, image=self.tk_img)
+        else:
+            # 只移动图片
+            cx = w // 2 + self.offset_x
+            cy = h // 2 + self.offset_y
+            self.canvas.coords(self.canvas_img, cx, cy)
 
     def on_drag_start(self, event):
         self.drag_data['x'] = event.x
@@ -244,7 +289,8 @@ class ImageSorter:
         self.offset_y += dy
         self.drag_data['x'] = event.x
         self.drag_data['y'] = event.y
-        self.render_image()
+        # 只移动canvas图片，不重建tk_img
+        self.render_image(force_new_img=False)
 
     def on_drag_end(self, event):
         self.drag_data['dragging'] = False
@@ -273,11 +319,11 @@ class ImageSorter:
 
     def ctrl_plus(self, event=None):
         self.scale = min(self.max_scale, self.scale * 1.1)
-        self.render_image()
+        self.render_image(force_new_img=True)
 
     def ctrl_minus(self, event=None):
         self.scale = max(self.min_scale, self.scale / 1.1)
-        self.render_image()
+        self.render_image(force_new_img=True)
 
     def ctrl_mousewheel(self, event):
         pass  # 兼容保留，不再绑定
@@ -287,12 +333,12 @@ class ImageSorter:
         webbrowser.open('https://github.com/jdhnsu')
 
     def on_resize(self, event):
-        self.render_image()
+        self.render_image(force_new_img=True)
 
     def arrow_pan(self, dx, dy):
         self.offset_x += dx
         self.offset_y += dy
-        self.render_image()
+        self.render_image(force_new_img=False)
 
 # 运行程序
 if __name__ == "__main__":
