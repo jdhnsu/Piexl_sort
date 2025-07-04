@@ -5,20 +5,23 @@ from tkinter import messagebox
 from tkinter import simpledialog
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
+import tkinter.filedialog as filedialog
 
 # 设置分类文件夹
 categories = ['清洗', '保留', '阴影', '遮挡']
 image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
 
 # 获取当前目录所有图片
-def get_image_files():
-    return [f for f in os.listdir('.') if os.path.splitext(f)[1].lower() in image_extensions]
+def get_image_files(work_dir):
+    # 返回文件名列表
+    return [f for f in os.listdir(work_dir) if os.path.splitext(f)[1].lower() in image_extensions]
 
 # 创建分类文件夹（如果不存在）
-def create_folders():
+def create_folders(work_dir):
     for category in categories:
-        if not os.path.exists(category):
-            os.makedirs(category)
+        path = os.path.join(work_dir, category)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
 class ImageSorter:
     def setup_style(self):
@@ -63,35 +66,65 @@ class ImageSorter:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("图片分类工具 - 数据清洗")
-        self.root.geometry("1200x945")  # 窗口大小
-        self.root.configure(bg="#23272F")
-        self.setup_style()
-        self.image_files = get_image_files()
-        self.total_count = len(self.image_files)  # 记录总数
+        self.layout_mode = "grid"  # 必须最先初始化
+        self.work_dir = os.getcwd()
+        self.image_files = []
+        self.total_count = 0
         self.index = 0
-        self.history = []  # 记录历史操作
-        self.scale = 1.0   # 当前缩放比例
+        self.history = []
+        self.scale = 1.0
         self.min_scale = 0.1
         self.max_scale = 5.0
-        self.img = None    # 当前PIL图片对象
-        self.tk_img = None # 当前Tk图片对象
-        self.offset_x = 0  # 平移偏移
+        self.img = None
+        self.tk_img = None
+        self.offset_x = 0
         self.offset_y = 0
         self.drag_data = {'x': 0, 'y': 0, 'dragging': False}
-        self.layout_mode = "grid"  # "grid"=2x2宫格, "row"=1x4横排
+        self.label_cache = {}
         try:
             self.resample_method = Image.Resampling.LANCZOS
         except AttributeError:
             self.resample_method = Image.ANTIALIAS
-        self.label_cache = {}  # 缓存已生成的四图拼接图
+        self.root.title("图片分类工具 - 数据清洗")
+        self.root.geometry("1200x945")
+        self.root.configure(bg="#23272F")
+        self.setup_style()
+        self.show_workdir_selector()
 
-        # 先显示选择图片界面
-        if self.image_files:
-            self.show_start_image_selector()
-        else:
-            self.init_main_ui()
-            self.load_image()
+    def show_workdir_selector(self):
+        self.workdir_frame = tk.Frame(self.root, bg="#23272F")
+        self.workdir_frame.pack(expand=True, fill='both')
+        tk.Label(self.workdir_frame, text="请选择图片工作目录：", font=("SegoeUI", 14, "bold"), bg="#23272F", fg="#F5F6FA").pack(padx=10, pady=16)
+        path_var = tk.StringVar(value=self.work_dir)
+        path_entry = tk.Entry(self.workdir_frame, textvariable=path_var, font=("SegoeUI", 12), width=48, bg="#353945", fg="#F5F6FA", bd=0, relief='flat')
+        path_entry.pack(padx=10, pady=8, fill='x', expand=True)
+        def choose_dir():
+            d = filedialog.askdirectory(initialdir=self.work_dir, title="选择图片文件夹")
+            if d:
+                path_var.set(d)
+        btn = ttk.Button(self.workdir_frame, text="更改", style='Rounded.TButton', command=choose_dir)
+        btn.pack(pady=8, ipadx=12, ipady=2)
+        def ok():
+            self.work_dir = path_var.get()
+            self.workdir_frame.destroy()
+            create_folders(self.work_dir)
+            self.image_files = get_image_files(self.work_dir)
+            self.total_count = len(self.image_files)
+            self.index = 0
+            self.history = []
+            self.scale = 1.0
+            self.img = None
+            self.tk_img = None
+            self.offset_x = 0
+            self.offset_y = 0
+            self.label_cache = {}
+            if self.image_files:
+                self.show_start_image_selector()
+            else:
+                self.init_main_ui()
+                self.load_image()
+        ok_btn = ttk.Button(self.workdir_frame, text="确定", style='Rounded.TButton', command=ok)
+        ok_btn.pack(pady=18, ipadx=16, ipady=4)
 
     def show_start_image_selector(self):
         self.selector_frame = tk.Frame(self.root, bg="#23272F")
@@ -242,17 +275,19 @@ class ImageSorter:
             self.status_label.config(text="🎉 所有图片已分类完成！")
             messagebox.showinfo("完成", "所有图片已完成分类。")
             return
-        img_path = self.image_files[self.index]
+        img_name = self.image_files[self.index]
+        img_path = os.path.join(self.work_dir, img_name)
         # 优先从缓存读取
-        if img_path in self.label_cache and self.label_cache[img_path].get(self.layout_mode):
-            new_img = self.label_cache[img_path][self.layout_mode]
+        if img_name in self.label_cache and self.label_cache[img_name].get(self.layout_mode):
+            new_img = self.label_cache[img_name][self.layout_mode]
         else:
             seg_size = 10
             seg_start = (self.index // seg_size) * seg_size
             seg_end = min(seg_start + seg_size, len(self.image_files))
             for i in range(seg_start, seg_end):
-                path = self.image_files[i]
-                if path in self.label_cache and self.label_cache[path].get(self.layout_mode):
+                name = self.image_files[i]
+                path = os.path.join(self.work_dir, name)
+                if name in self.label_cache and self.label_cache[name].get(self.layout_mode):
                     continue
                 try:
                     big_img = Image.open(path).convert('RGB')
@@ -264,8 +299,8 @@ class ImageSorter:
                     label_img = orig_img.copy()
                     red = Image.new('RGB', orig_img.size, (255,0,0))
                     label_img = Image.composite(red, label_img, mask_img.point(lambda x: 128 if x > 30 else 0))
-                    if path not in self.label_cache:
-                        self.label_cache[path] = {}
+                    if name not in self.label_cache:
+                        self.label_cache[name] = {}
                     if self.layout_mode == "grid":
                         # 2x2宫格
                         w1, h1 = orig_img.size
@@ -283,7 +318,7 @@ class ImageSorter:
                         grid_img.paste(mask_img.convert('RGB'), (col1_w, 0))
                         grid_img.paste(label_img, (0, row1_h))
                         grid_img.paste(crop_img, (col1_w, row1_h))
-                        self.label_cache[path]["grid"] = grid_img
+                        self.label_cache[name]["grid"] = grid_img
                     else:
                         # 1x4横排
                         imgs = [orig_img, mask_img.convert('RGB'), label_img, crop_img]
@@ -294,22 +329,22 @@ class ImageSorter:
                         for im in imgs:
                             row_img.paste(im, (x, 0))
                             x += im.width
-                        self.label_cache[path]["row"] = row_img
+                        self.label_cache[name]["row"] = row_img
                 except Exception as e:
-                    if path not in self.label_cache:
-                        self.label_cache[path] = {}
-                    self.label_cache[path][self.layout_mode] = None
-            new_img = self.label_cache.get(img_path, {}).get(self.layout_mode)
+                    if name not in self.label_cache:
+                        self.label_cache[name] = {}
+                    self.label_cache[name][self.layout_mode] = None
+            new_img = self.label_cache.get(img_name, {}).get(self.layout_mode)
             if new_img is None:
                 self.canvas.delete('all')
-                self.status_label.config(text=f"图片加载失败: {img_path}")
+                self.status_label.config(text=f"图片加载失败: {img_name}")
                 return
         self.img = new_img
         self.offset_x = 0
         self.offset_y = 0
         self.render_image()
         done = self.total_count - len(self.image_files) + self.index + 1
-        self.status_label.config(text=f"当前图片：{img_path} (已分 {done}/{self.total_count}) - 快捷键：1清洗 2保留 3阴影 4遮挡  滚轮/Ctrl +/Ctrl -(缩放)")
+        self.status_label.config(text=f"当前图片：{img_name} (已分 {done}/{self.total_count}) - 快捷键：1清洗 2保留 3阴影 4遮挡  滚轮/Ctrl +/Ctrl -(缩放)")
 
     def render_image(self, force_new_img=True):
         if self.img is None:
@@ -361,9 +396,9 @@ class ImageSorter:
         self.drag_data['dragging'] = False
 
     def move_image(self, category):
-        img_path = self.image_files[self.index]
-        self.history.append((img_path, self.index, category))
-        shutil.move(img_path, os.path.join(category, img_path))
+        img_name = self.image_files[self.index]
+        self.history.append((img_name, self.index, category))
+        shutil.move(os.path.join(self.work_dir, img_name), os.path.join(self.work_dir, category, img_name))
         del self.image_files[self.index]
         self.load_image()
 
@@ -372,8 +407,8 @@ class ImageSorter:
             messagebox.showinfo("提示", "没有可撤销的操作！")
             return
         last_img, last_index, last_category = self.history.pop()
-        src = os.path.join(last_category, last_img)
-        dst = last_img
+        src = os.path.join(self.work_dir, last_category, last_img)
+        dst = os.path.join(self.work_dir, last_img)
         if os.path.exists(src):
             shutil.move(src, dst)
         if last_img in self.image_files:
@@ -407,7 +442,7 @@ class ImageSorter:
 
 # 运行程序
 if __name__ == "__main__":
-    create_folders()
+    create_folders(os.getcwd())
     root = tk.Tk()
     app = ImageSorter(root)
     root.mainloop()
