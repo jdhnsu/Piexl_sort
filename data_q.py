@@ -64,7 +64,7 @@ class ImageSorter:
     def __init__(self, root):
         self.root = root
         self.root.title("图片分类工具 - 数据清洗")
-        self.root.geometry("1468x736")
+        self.root.geometry("1200x945")  # 窗口大小
         self.root.configure(bg="#23272F")
         self.setup_style()
         self.image_files = get_image_files()
@@ -79,6 +79,7 @@ class ImageSorter:
         self.offset_x = 0  # 平移偏移
         self.offset_y = 0
         self.drag_data = {'x': 0, 'y': 0, 'dragging': False}
+        self.layout_mode = "grid"  # "grid"=2x2宫格, "row"=1x4横排
         try:
             self.resample_method = Image.Resampling.LANCZOS
         except AttributeError:
@@ -127,7 +128,7 @@ class ImageSorter:
         self.load_image()
 
     def init_main_ui(self):
-        self.canvas = tk.Canvas(self.root, bg='#000000', highlightthickness=0)
+        self.canvas = tk.Canvas(self.root, bg='#181A20', highlightthickness=0)
         self.canvas.pack(fill='both', expand=True, padx=16, pady=12)
         self.canvas_img = None
         self.canvas.bind('<ButtonPress-1>', self.on_drag_start)
@@ -140,6 +141,15 @@ class ImageSorter:
         self.canvas.bind('<Up>', lambda e: self.arrow_pan(0, -40))
         self.canvas.bind('<Down>', lambda e: self.arrow_pan(0, 40))
         self.canvas.focus_set()
+        # 在canvas下方新建一行放切换按钮
+        self.switch_frame = tk.Frame(self.root, bg="#23272F")
+        self.switch_frame.pack(fill='x', padx=16, pady=(0, 2), anchor='e')
+        self.switch_icon_grid = self._create_grid_icon()
+        self.switch_icon_row = self._create_row_icon()
+        self.switch_btn = tk.Button(self.switch_frame, image=self.switch_icon_row if self.layout_mode=="grid" else self.switch_icon_grid,
+                                    command=self.toggle_layout, bd=0, bg="#23272F", activebackground="#353945", highlightthickness=2, relief='flat',
+                                    width=32, height=32)
+        self.switch_btn.pack(side='right', padx=2, pady=2)
         self.button_frame = tk.Frame(self.root, bg="#23272F")
         self.button_frame.pack(pady=14)
         for cat in categories:
@@ -193,25 +203,56 @@ class ImageSorter:
         else:
             self.ctrl_minus()
 
+    def _place_switch_btn(self, event=None):
+        # 放在canvas右下角，距离边缘18px
+        w = self.canvas.winfo_width()
+        h = self.canvas.winfo_height()
+        self.canvas.coords(self.switch_btn_window, w-18, h-18)
+
+    def _create_grid_icon(self):
+        # 画一个2x2宫格图标，带圆形背景
+        from PIL import ImageDraw
+        img = Image.new('RGBA', (32,32), (0,0,0,0))
+        draw = ImageDraw.Draw(img)
+        draw.ellipse([0,0,31,31], fill="#23272F", outline="#F5F6FA", width=2)
+        for x in [7, 17]:
+            for y in [7, 17]:
+                draw.rectangle([x, y, x+6, y+6], outline="#F5F6FA", width=2, fill="#353945")
+        return ImageTk.PhotoImage(img)
+
+    def _create_row_icon(self):
+        # 画一个1x4横条图标，带圆形背景
+        from PIL import ImageDraw
+        img = Image.new('RGBA', (32,32), (0,0,0,0))
+        draw = ImageDraw.Draw(img)
+        draw.ellipse([0,0,31,31], fill="#23272F", outline="#F5F6FA", width=2)
+        for i in range(4):
+            draw.rectangle([5+i*6, 13, 9+i*6, 19], outline="#F5F6FA", width=2, fill="#353945")
+        return ImageTk.PhotoImage(img)
+
+    def toggle_layout(self):
+        self.layout_mode = "row" if self.layout_mode=="grid" else "grid"
+        # 切换按钮图标
+        self.switch_btn.config(image=self.switch_icon_row if self.layout_mode=="grid" else self.switch_icon_grid)
+        self.load_image()
+
     def load_image(self):
         if self.index >= len(self.image_files):
             self.canvas.delete('all')
             self.status_label.config(text="🎉 所有图片已分类完成！")
             messagebox.showinfo("完成", "所有图片已完成分类。")
             return
-
         img_path = self.image_files[self.index]
         # 优先从缓存读取
-        if img_path in self.label_cache:
-            new_img = self.label_cache[img_path]
+        if img_path in self.label_cache and self.label_cache[img_path].get(self.layout_mode):
+            new_img = self.label_cache[img_path][self.layout_mode]
         else:
-            # 批量处理当前段（每段10张）
             seg_size = 10
             seg_start = (self.index // seg_size) * seg_size
             seg_end = min(seg_start + seg_size, len(self.image_files))
             for i in range(seg_start, seg_end):
                 path = self.image_files[i]
-                if path in self.label_cache:
+                if path in self.label_cache and self.label_cache[path].get(self.layout_mode):
                     continue
                 try:
                     big_img = Image.open(path).convert('RGB')
@@ -223,18 +264,42 @@ class ImageSorter:
                     label_img = orig_img.copy()
                     red = Image.new('RGB', orig_img.size, (255,0,0))
                     label_img = Image.composite(red, label_img, mask_img.point(lambda x: 128 if x > 30 else 0))
-                    imgs = [orig_img, mask_img.convert('RGB'), label_img, crop_img]
-                    total_w = sum(im.width for im in imgs)
-                    max_h = max(im.height for im in imgs)
-                    seg_img = Image.new('RGB', (total_w, max_h), (0,0,0))
-                    x = 0
-                    for im in imgs:
-                        seg_img.paste(im, (x, 0))
-                        x += im.width
-                    self.label_cache[path] = seg_img
+                    if path not in self.label_cache:
+                        self.label_cache[path] = {}
+                    if self.layout_mode == "grid":
+                        # 2x2宫格
+                        w1, h1 = orig_img.size
+                        w2, h2 = mask_img.size
+                        w3, h3 = label_img.size
+                        w4, h4 = crop_img.size
+                        row1_h = max(h1, h2)
+                        row2_h = max(h3, h4)
+                        col1_w = max(w1, w3)
+                        col2_w = max(w2, w4)
+                        total_w = col1_w + col2_w
+                        total_h = row1_h + row2_h
+                        grid_img = Image.new('RGB', (total_w, total_h), (0,0,0))
+                        grid_img.paste(orig_img, (0, 0))
+                        grid_img.paste(mask_img.convert('RGB'), (col1_w, 0))
+                        grid_img.paste(label_img, (0, row1_h))
+                        grid_img.paste(crop_img, (col1_w, row1_h))
+                        self.label_cache[path]["grid"] = grid_img
+                    else:
+                        # 1x4横排
+                        imgs = [orig_img, mask_img.convert('RGB'), label_img, crop_img]
+                        total_w = sum(im.width for im in imgs)
+                        max_h = max(im.height for im in imgs)
+                        row_img = Image.new('RGB', (total_w, max_h), (0,0,0))
+                        x = 0
+                        for im in imgs:
+                            row_img.paste(im, (x, 0))
+                            x += im.width
+                        self.label_cache[path]["row"] = row_img
                 except Exception as e:
-                    self.label_cache[path] = None
-            new_img = self.label_cache.get(img_path)
+                    if path not in self.label_cache:
+                        self.label_cache[path] = {}
+                    self.label_cache[path][self.layout_mode] = None
+            new_img = self.label_cache.get(img_path, {}).get(self.layout_mode)
             if new_img is None:
                 self.canvas.delete('all')
                 self.status_label.config(text=f"图片加载失败: {img_path}")
