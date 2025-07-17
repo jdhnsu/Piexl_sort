@@ -442,7 +442,6 @@ class ImageSorter:
 
 # 运行程序
 if __name__ == "__main__":
-    create_folders(os.getcwd())
     root = tk.Tk()
     app = ImageSorter(root)
     root.mainloop()
