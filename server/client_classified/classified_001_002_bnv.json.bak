@@ -1,0 +1,598 @@
+{
+  "p4_10146.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10156.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10185.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10195.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10368.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1040.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10432.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1050.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10608.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10618.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10624.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10634.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1068.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1078.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10803.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10807.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10813.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_10817.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1087.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1093.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11062.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11089.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11099.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11248.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11258.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11260.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11270.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11502.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11506.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11516.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11710.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11923.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_11927.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12027.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12033.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12219.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12225.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1242.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1252.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12543.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12557.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12590.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12594.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12741.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12745.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12751.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12755.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12782.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_12792.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1295.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1508.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1518.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1520.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1524.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1530.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1722.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1901.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1905.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1929.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_1939.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2001.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2011.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2015.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2203.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2207.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2549.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2559.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2575.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2763.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2767.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2773.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2950.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2978.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2983.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2987.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_2997.png": [
+    {
+      "category": "清洗",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_3109.png": [
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ],
+  "p4_311.png": [
+    {
+      "category": "遮挡",
+      "user_id": "001_002_bnv"
+    },
+    {
+      "category": "保留",
+      "user_id": "001_002_bnv"
+    }
+  ]
+}

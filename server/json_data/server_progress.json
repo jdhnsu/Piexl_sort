@@ -1,0 +1,22 @@
+{
+  "001_001_exl": {
+    "total_images": 20,
+    "processed_images": 17,
+    "last_update": "2025-08-12 15:49:50"
+  },
+  "001_002_bnv": {
+    "total_images": 20,
+    "processed_images": 14,
+    "last_update": "2025-08-12 15:47:18"
+  },
+  "002_002_jfm": {
+    "total_images": 19,
+    "processed_images": 13,
+    "last_update": "2025-08-12 16:04:46"
+  },
+  "002_001_fbv": {
+    "total_images": 50,
+    "processed_images": 50,
+    "last_update": "2025-08-11T10:00:37"
+  }
+}

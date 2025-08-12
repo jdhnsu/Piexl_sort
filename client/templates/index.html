@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片分类客户端</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6fa;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 5px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        h1 {
+            color: #6750A4;
+            margin: 10px 0;
+            font-size: 24px;
+        }
+        .connection-form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #6750A4;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #5a4a8f;
+        }
+        .image-container {
+            text-align: center;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+            background-color: #181A20;
+            border-radius: 6px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            height: 75vh;
+        }
+        #processed-image {
+            max-width: 95%;
+            max-height: 95%;
+            border: none;
+            border-radius: 0;
+            cursor: move;
+            user-select: none;
+            box-shadow: none;
+            object-fit: contain;
+        }
+        /* 添加前景占比显示样式 */
+        .foreground-ratio {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .category-btn {
+            background-color: #353945;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .category-btn:hover {
+            background-color: #2a2d36;
+        }
+        .progress-info {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        .hidden {
+            display: none;
+        }
+        .status-message {
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            text-align: center;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .warning {
+            background-color: #fff8e1;
+            color: #f57f17;
+        }
+        /* 添加控制栏样式 */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 0 5px;
+        }
+        /* 添加缩放控制按钮样式 */
+        .zoom-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #353945;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .zoom-btn:hover {
+            background-color: #2a2d36;
+        }
+        /* 添加布局切换按钮样式 */
+        .layout-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .layout-btn {
+            background-color: #353945;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .layout-btn:hover {
+            background-color: #2a2d36;
+        }
+        .layout-btn.active {
+            background-color: #6750A4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>图片分类客户端</h1>
+        </header>
+        
+        <div id="connection-section">
+            <div class="connection-form">
+                <div class="form-group">
+                    <label for="server-url">服务器地址:</label>
+                    <input type="text" id="server-url" placeholder="例如: http://localhost:5000">
+                </div>
+                <div class="form-group">
+                    <label for="token">个人Token:</label>
+                    <input type="text" id="token" placeholder="请输入您的Token">
+                </div>
+                <button id="connect-btn">连接服务器</button>
+            </div>
+        </div>
+        
+        <div id="task-section" class="hidden">
+            <div class="progress-info">
+                <p>当前进度: <span id="current-index">0</span>/<span id="total-count">0</span></p>
+            </div>
+            
+            <div class="current-image-info" style="text-align: center; margin: 5px 0; font-size: 14px; color: #666;">
+                <p>当前文件: <span id="current-image-name">无</span></p>
+            </div>
+            
+            <div class="controls-bar">
+                <div class="layout-controls">
+                    <button id="grid-layout-btn" class="layout-btn">宫格布局</button>
+                    <button id="row-layout-btn" class="layout-btn active">横向布局</button>
+                </div>
+                
+                <div class="zoom-controls">
+                    <button id="zoom-in-btn" class="zoom-btn">+</button>
+                    <button id="zoom-out-btn" class="zoom-btn">-</button>
+                    <button id="reset-view-btn" class="zoom-btn">↺</button>
+                </div>
+            </div>
+            
+            <div class="image-container">
+                <div id="foreground-ratio" class="foreground-ratio" style="display: none;"></div>
+                <img id="processed-image" alt="处理后的图片">
+            </div>
+            
+            <div class="controls">
+                <button class="category-btn" data-category="清洗">清洗</button>
+                <button class="category-btn" data-category="保留">保留</button>
+                <button class="category-btn" data-category="阴影">阴影</button>
+                <button class="category-btn" data-category="遮挡">遮挡</button>
+                <button id="undo-btn" class="category-btn" style="background-color: #6750A4;">撤销</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="submit-btn">提交分类结果</button>
+            </div>
+            
+            <!-- 设置按钮放在右下角 -->
+            <div style="position: fixed; bottom: 20px; right: 20px;">
+                <button id="settings-btn" style="background-color: #353945; padding: 8px 12px; border-radius: 50%; width: 40px; height: 40px; font-size: 16px; display: flex; align-items: center; justify-content: center;">⚙</button>
+            </div>
+        </div>
+        
+        <div id="status-message" class="status-message hidden"></div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentImage = null;
+        let currentIndex = 0;
+        let totalCount = 0;
+        // 添加缩放和拖拽相关变量
+        let scale = 1;
+        let minScale = 0.1;
+        let maxScale = 5;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startOffsetX = 0;
+        let startOffsetY = 0;
+        // 添加布局模式变量
+        let layoutMode = "row"; // "grid" 或 "row"
+        // 添加历史记录变量
+        let history = [];
+        const maxHistoryLength = 3;
+        
+        // DOM元素
+        const connectionSection = document.getElementById('connection-section');
+        const taskSection = document.getElementById('task-section');
+        const serverUrlInput = document.getElementById('server-url');
+        const tokenInput = document.getElementById('token');
+        const connectBtn = document.getElementById('connect-btn');
+        const processedImage = document.getElementById('processed-image');
+        const currentIndexSpan = document.getElementById('current-index');
+        const totalCountSpan = document.getElementById('total-count');
+        const submitBtn = document.getElementById('submit-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const statusMessage = document.getElementById('status-message');
+        const settingsBtn = document.getElementById('settings-btn');
+        // 获取新增的控制按钮
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const resetViewBtn = document.getElementById('reset-view-btn');
+        const gridLayoutBtn = document.getElementById('grid-layout-btn');
+        const rowLayoutBtn = document.getElementById('row-layout-btn');
+        
+        // 事件监听器
+        connectBtn.addEventListener('click', connectToServer);
+        submitBtn.addEventListener('click', submitClassification);
+        document.getElementById('undo-btn').addEventListener('click', undo);
+        settingsBtn.addEventListener('click', openSettings);
+        
+        // 初始化分类按钮
+        updateCategoryButtons();
+        
+        // 为所有分类按钮添加事件监听器
+        /* document.querySelectorAll('.category-btn:not(#undo-btn)').forEach(button => {
+            button.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                classifyCurrentImage(category);
+            });
+        }); */
+        
+        // 添加缩放和拖拽事件监听器
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        resetViewBtn.addEventListener('click', resetView);
+        
+        // 添加布局切换事件监听器
+        gridLayoutBtn.addEventListener('click', () => switchLayout('grid'));
+        rowLayoutBtn.addEventListener('click', () => switchLayout('row'));
+        
+        // 图片拖拽事件
+        processedImage.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+        
+        // 鼠标滚轮缩放
+        processedImage.addEventListener('wheel', handleWheel);
+        
+        // 键盘快捷键
+        /* function handleKeyDown(e) {
+            // 只在任务界面启用快捷键
+            if (taskSection.classList.contains('hidden')) return;
+            
+            switch(e.key) {
+                case '+':
+                case '=':
+                    if (e.ctrlKey) zoomIn();
+                    break;
+                case '-':
+                    if (e.ctrlKey) zoomOut();
+                    break;
+                case '0':
+                    if (e.ctrlKey) resetView();
+                    break;
+                case 'z':
+                case 'Z':
+                    if (e.ctrlKey) undo();
+                    break;
+                case 'ArrowLeft':
+                    offsetX += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowRight':
+                    offsetX -= 40;
+                    applyTransform();
+                    break;
+                case 'ArrowUp':
+                    offsetY += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowDown':
+                    offsetY -= 40;
+                    applyTransform();
+                    break;
+            }
+        } */
+        
+        // 窗口大小调整处理
+        window.addEventListener('resize', handleResize);
+        
+        // 双击重置视图
+        processedImage.addEventListener('dblclick', resetView);
+        
+        // 连接服务器
+        function connectToServer() {
+            const serverUrl = serverUrlInput.value.trim();
+            const token = tokenInput.value.trim();
+            
+            if (!serverUrl || !token) {
+                showStatus('服务器地址和Token不能为空', 'error');
+                return;
+            }
+            
+            fetch('/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    server_url: serverUrl,
+                    token: token
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    showStatus('连接成功！正在加载任务...', 'success');
+                    connectionSection.classList.add('hidden');
+                    taskSection.classList.remove('hidden');
+                    // 启用分类按钮
+                    enableClassificationButtons();
+                    loadNextImage();
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('连接服务器时出错: ' + error.message, 'error');
+            });
+        }
+        
+        // 加载下一张图片
+        function loadNextImage() {
+            fetch('/get_current_image')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    currentImage = data.image;
+                    currentIndex = data.index;
+                    totalCount = data.total;
+                    
+                    currentIndexSpan.textContent = currentIndex + 1;
+                    totalCountSpan.textContent = totalCount;
+                    
+                    // 更新当前文件名显示
+                    document.getElementById('current-image-name').textContent = currentImage;
+                    
+                    // 重置视图状态
+                    resetView();
+                    
+                    // 处理并显示图片
+                    processAndDisplayImage(currentImage);
+                } else if (data.status === 'completed') {
+                    // 显示完成提示并禁用分类按钮
+                    showStatus('🎉 所有图片已分类完成！请提交分类结果。', 'success');
+                    disableClassificationButtons();
+                    // 更新当前文件名显示
+                    document.getElementById('current-image-name').textContent = '已完成所有图片分类';
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('加载图片时出错: ' + error.message, 'error');
+            });
+        }
+        
+        // 处理并显示图片
+        function processAndDisplayImage(imageName) {
+            fetch(`/process_image/${encodeURIComponent(imageName)}?layout=${layoutMode}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    processedImage.src = 'data:image/png;base64,' + data.image_data;
+                    // 图片加载完成后应用变换
+                    processedImage.onload = applyTransform;
+                    
+                    // 显示前景占比
+                    if (data.foreground_ratio !== undefined) {
+                        const ratioElement = document.getElementById('foreground-ratio');
+                        ratioElement.textContent = `前景占比: ${(data.foreground_ratio * 100).toFixed(2)}%`;
+                        ratioElement.style.display = 'block';
+                    }
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('处理图片时出错: ' + error.message, 'error');
+            });
+        }
+        
+        // 分类当前图片
+        function classifyCurrentImage(category) {
+            if (!currentImage) {
+                showStatus('没有可分类的图片', 'error');
+                return;
+            }
+            
+            // 检查是否已经完成所有图片分类
+            if (currentIndex >= totalCount) {
+                showStatus('🎉 所有图片已分类完成！请提交分类结果。', 'warning');
+                return;
+            }
+            
+            // 保存当前状态到历史记录
+            saveToHistory(currentImage, category);
+            
+            fetch('/classify_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image_name: currentImage,
+                    category: category
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    showStatus(`图片已分类为"${category}"`, 'success');
+                    // 加载下一张图片（保持当前的缩放和偏移状态）
+                    loadNextImage();
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('分类图片时出错: ' + error.message, 'error');
+            });
+        }
+        
+        // 提交分类结果
+        function submitClassification() {
+            if (currentIndex < totalCount) {
+                if (confirm('还有未处理的图片，确定要提交当前分类结果吗？')) {
+                    doSubmit();
+                }
+            } else {
+                doSubmit();
+            }
+        }
+        
+        // 保存到历史记录
+        function saveToHistory(imageName, category) {
+            // 添加到历史记录开头
+            history.unshift({
+                image: imageName,
+                category: category,
+                index: currentIndex
+            });
+            
+            // 限制历史记录长度为3
+            if (history.length > maxHistoryLength) {
+                history.pop();
+            }
+        }
+        
+        // 撤销功能
+        function undo() {
+            // 检查是否已经完成所有图片分类
+            if (currentIndex >= totalCount && history.length === 0) {
+                // 即使在完成状态下也允许撤销操作
+                // 检查本地分类文件是否存在
+                fetch('/undo_from_local_file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showStatus(`已从本地文件撤销分类操作`, 'success');
+                        // 更新索引并重新加载图片
+                        currentIndex = data.new_index;
+                        // 启用分类按钮（在撤销操作后）
+                        enableClassificationButtons();
+                        loadNextImage();
+                    } else {
+                        showStatus(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus('从本地文件撤销操作时出错: ' + error.message, 'error');
+                });
+                return;
+            }
+            
+            // 首先尝试从内存历史记录中撤销
+            if (history.length > 0) {
+                // 从历史记录中取出最后一项
+                const lastAction = history.shift();
+                
+                fetch('/undo_classification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image_name: lastAction.image,
+                        category: lastAction.category,
+                        from_memory: true
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showStatus(`已撤销对"${lastAction.image}"的分类操作`, 'success');
+                        // 重新加载当前图片
+                        currentIndex = lastAction.index;
+                        // 启用分类按钮（在撤销操作后）
+                        enableClassificationButtons();
+                        loadNextImage();
+                    } else {
+                        showStatus(data.message, 'error');
+                        // 撤销失败时，将操作放回历史记录
+                        history.unshift(lastAction);
+                    }
+                })
+                .catch(error => {
+                    showStatus('撤销操作时出错: ' + error.message, 'error');
+                    // 撤销失败时，将操作放回历史记录
+                    history.unshift(lastAction);
+                });
+            } else {
+                // 如果内存中没有历史记录，则从本地分类文件撤销
+                fetch('/undo_from_local_file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showStatus(`已从本地文件撤销分类操作`, 'success');
+                        // 更新索引并重新加载图片
+                        currentIndex = data.new_index;
+                        // 启用分类按钮（在撤销操作后）
+                        enableClassificationButtons();
+                        loadNextImage();
+                    } else {
+                        showStatus(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus('从本地文件撤销操作时出错: ' + error.message, 'error');
+                });
+            }
+        }
+        
+        function doSubmit() {
+            fetch('/submit_classification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    showStatus(data.message, 'success');
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('提交分类结果时出错: ' + error.message, 'error');
+            });
+        }
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            statusMessage.classList.remove('hidden');
+            
+            // 3秒后自动隐藏成功消息
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                }, 3000);
+            }
+        }
+        
+        // 缩放功能
+        function zoomIn() {
+            scale = Math.min(maxScale, scale * 1.2);
+            applyTransform();
+        }
+        
+        function zoomOut() {
+            scale = Math.max(minScale, scale / 1.2);
+            applyTransform();
+        }
+        
+        function resetView() {
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            applyTransform();
+            
+            // 隐藏前景占比显示
+            const ratioElement = document.getElementById('foreground-ratio');
+            if (ratioElement) {
+                ratioElement.style.display = 'none';
+            }
+        }
+        
+        // 拖拽功能
+        function startDrag(e) {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startOffsetX = offsetX;
+            startOffsetY = offsetY;
+            processedImage.style.cursor = 'grabbing';
+            e.preventDefault();
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            offsetX = startOffsetX + dx;
+            offsetY = startOffsetY + dy;
+            applyTransform();
+        }
+        
+        function endDrag() {
+            isDragging = false;
+            processedImage.style.cursor = 'move';
+        }
+        
+        // 鼠标滚轮缩放
+        function handleWheel(e) {
+            e.preventDefault();
+            const rect = processedImage.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const zoomIntensity = 0.1;
+            const wheel = e.deltaY < 0 ? 1 : -1;
+            const zoom = Math.exp(wheel * zoomIntensity);
+            
+            // 限制缩放范围
+            const newScale = Math.min(maxScale, Math.max(minScale, scale * zoom));
+            
+            // 调整偏移量以实现鼠标位置缩放
+            offsetX = x - (x - offsetX) * (newScale / scale);
+            offsetY = y - (y - offsetY) * (newScale / scale);
+            
+            scale = newScale;
+            applyTransform();
+        }
+        
+        // 应用变换（缩放和平移）
+        function applyTransform() {
+            processedImage.style.transform = `scale(${scale}) translate(${offsetX/scale}px, ${offsetY/scale}px)`;
+            processedImage.style.transformOrigin = 'center center';
+        }
+        
+        // 键盘快捷键
+        function handleKeyDown(e) {
+            // 只在任务界面启用快捷键
+            if (taskSection.classList.contains('hidden')) return;
+            
+            switch(e.key) {
+                case '+':
+                case '=':
+                    if (e.ctrlKey) zoomIn();
+                    break;
+                case '-':
+                    if (e.ctrlKey) zoomOut();
+                    break;
+                case '0':
+                    if (e.ctrlKey) resetView();
+                    break;
+                case 'z':
+                case 'Z':
+                    if (e.ctrlKey) undo();
+                    break;
+                case 'ArrowLeft':
+                    offsetX += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowRight':
+                    offsetX -= 40;
+                    applyTransform();
+                    break;
+                case 'ArrowUp':
+                    offsetY += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowDown':
+                    offsetY -= 40;
+                    applyTransform();
+                    break;
+            }
+        }
+        
+        // 窗口大小调整处理
+        function handleResize() {
+            if (!taskSection.classList.contains('hidden')) {
+                // 简单的重置视图以适应新尺寸
+                applyTransform();
+            }
+        }
+        
+        // 禁用分类按钮
+        function disableClassificationButtons() {
+            // 禁用所有分类按钮（除了撤销按钮）
+            document.querySelectorAll('.category-btn:not(#undo-btn)').forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+            });
+        }
+        
+        // 启用分类按钮
+        function enableClassificationButtons() {
+            // 启用所有分类按钮（除了撤销按钮）
+            document.querySelectorAll('.category-btn:not(#undo-btn)').forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            });
+        }
+        
+        // 布局切换功能
+        function switchLayout(mode) {
+            layoutMode = mode;
+            
+            // 更新按钮状态
+            if (mode === 'grid') {
+                gridLayoutBtn.classList.add('active');
+                rowLayoutBtn.classList.remove('active');
+            } else {
+                gridLayoutBtn.classList.remove('active');
+                rowLayoutBtn.classList.add('active');
+            }
+            
+            // 重新加载当前图片以应用新布局
+            if (currentImage) {
+                processAndDisplayImage(currentImage);
+            }
+        }
+        
+        // 设置功能相关函数
+        function openSettings() {
+            // 获取当前设置
+            const categoriesSettings = getCategoriesSettings();
+            
+            let settingsHTML = '<div id="settings-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">';
+            settingsHTML += '<div style="background-color: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 500px;">';
+            settingsHTML += '<h3 style="margin-top: 0;">分类设置</h3>';
+            settingsHTML += '<div id="category-settings">';
+            
+            // 为每个分类添加设置行
+            categoriesSettings.forEach((categorySetting, index) => {
+                settingsHTML += `<div style="display: flex; margin-bottom: 10px; align-items: center;">`;
+                settingsHTML += `<input type="checkbox" class="category-enable" data-index="${index}" ${categorySetting.enabled ? 'checked' : ''} style="margin-right: 10px;">`;
+                settingsHTML += `<label style="width: 100px;">分类名称:</label>`;
+                settingsHTML += `<input type="text" class="category-name" data-index="${index}" value="${categorySetting.name}" style="flex: 1; margin: 0 10px; padding: 5px;">`;
+                settingsHTML += `<label style="width: 60px;">快捷键:</label>`;
+                settingsHTML += `<select class="category-shortcut" data-index="${index}" style="flex: 1; margin: 0 10px; padding: 5px;">`;
+                
+                // 添加数字1-9作为快捷键选项
+                for (let i = 1; i <= 9; i++) {
+                    const selected = (i == categorySetting.shortcut) ? 'selected' : '';
+                    settingsHTML += `<option value="${i}" ${selected}>${i}</option>`;
+                }
+                
+                settingsHTML += `</select>`;
+                settingsHTML += `</div>`;
+            });
+            
+            settingsHTML += '</div>';
+            settingsHTML += '<div style="display: flex; justify-content: flex-end; margin-top: 20px;">';
+            settingsHTML += '<button id="cancel-settings" style="margin-right: 10px; background-color: #ccc;">取消</button>';
+            settingsHTML += '<button id="save-settings" style="background-color: #6750A4; color: white;">保存</button>';
+            settingsHTML += '</div>';
+            settingsHTML += '</div>';
+            settingsHTML += '</div>';
+            
+            // 添加到body
+            document.body.insertAdjacentHTML('beforeend', settingsHTML);
+            
+            // 添加事件监听器
+            document.getElementById('cancel-settings').addEventListener('click', closeSettings);
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+        }
+        
+        function closeSettings() {
+            const modal = document.getElementById('settings-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function saveSettings() {
+            const enables = document.querySelectorAll('.category-enable');
+            const names = document.querySelectorAll('.category-name');
+            const shortcuts = document.querySelectorAll('.category-shortcut');
+            
+            const categoriesSettings = [];
+            const categoryShortcuts = {};
+            
+            names.forEach((input, index) => {
+                const enabled = enables[index].checked;
+                const name = input.value.trim();
+                const shortcut = shortcuts[index].value;
+                
+                if (name) {
+                    const categorySetting = {
+                        name: name,
+                        enabled: enabled,
+                        shortcut: parseInt(shortcut)
+                    };
+                    categoriesSettings.push(categorySetting);
+                    
+                    if (enabled) {
+                        categoryShortcuts[name] = parseInt(shortcut);
+                    }
+                }
+            });
+            
+            // 保存到localStorage
+            localStorage.setItem('categoriesSettings', JSON.stringify(categoriesSettings));
+            localStorage.setItem('categoryShortcuts', JSON.stringify(categoryShortcuts));
+            
+            // 更新界面
+            updateCategoryButtons();
+            
+            // 关闭设置窗口
+            closeSettings();
+            
+            showStatus('设置已保存', 'success');
+        }
+        
+        // 获取分类设置
+        function getCategoriesSettings() {
+            const savedSettings = localStorage.getItem('categoriesSettings');
+            if (savedSettings) {
+                return JSON.parse(savedSettings);
+            }
+            
+            // 默认8个分类，前4个启用
+            return [
+                { name: '清洗', enabled: true, shortcut: 1 },
+                { name: '保留', enabled: true, shortcut: 2 },
+                { name: '阴影', enabled: true, shortcut: 3 },
+                { name: '遮挡', enabled: true, shortcut: 4 },
+                { name: '模糊', enabled: false, shortcut: 5 },
+                { name: '重复', enabled: false, shortcut: 6 },
+                { name: '其他', enabled: false, shortcut: 7 },
+                { name: '待定', enabled: false, shortcut: 8 }
+            ];
+        }
+        
+        // 获取快捷键设置
+        function getShortcuts() {
+            const savedShortcuts = localStorage.getItem('categoryShortcuts');
+            if (savedShortcuts) {
+                const shortcuts = JSON.parse(savedShortcuts);
+                const categoriesSettings = getCategoriesSettings();
+                const enabledCategories = categoriesSettings.filter(cat => cat.enabled);
+                return enabledCategories.map(category => shortcuts[category.name] || 0);
+            }
+            
+            // 默认快捷键
+            return [1, 2, 3, 4];
+        }
+        
+        // 更新分类按钮
+        function updateCategoryButtons() {
+            const categoriesSettings = getCategoriesSettings();
+            const enabledCategories = categoriesSettings.filter(cat => cat.enabled);
+            const shortcuts = getShortcuts();
+            
+            // 清除现有的分类按钮（除了撤销按钮）
+            const controlsDiv = document.querySelector('.controls');
+            const undoBtn = document.getElementById('undo-btn');
+            
+            // 保留撤销按钮
+            const undoButton = undoBtn ? undoBtn.parentNode.removeChild(undoBtn) : null;
+            
+            // 清空controls div
+            controlsDiv.innerHTML = '';
+            
+            // 重新创建分类按钮
+            enabledCategories.forEach((categorySetting, index) => {
+                const button = document.createElement('button');
+                button.className = 'category-btn';
+                button.setAttribute('data-category', categorySetting.name);
+                button.textContent = `${categorySetting.name} (${categorySetting.shortcut})`;
+                button.addEventListener('click', function() {
+                    const cat = this.getAttribute('data-category');
+                    classifyCurrentImage(cat);
+                });
+                controlsDiv.appendChild(button);
+            });
+            
+            // 重新添加撤销按钮
+            if (undoButton) {
+                controlsDiv.appendChild(undoButton);
+            }
+            
+            // 更新键盘快捷键监听器
+            updateKeyboardShortcuts();
+        }
+        
+        // 更新键盘快捷键监听器
+        function updateKeyboardShortcuts() {
+            // 移除旧的键盘事件监听器
+            document.removeEventListener('keydown', handleKeyDownWithCustomShortcuts);
+            
+            // 添加新的键盘事件监听器
+            document.addEventListener('keydown', handleKeyDownWithCustomShortcuts);
+        }
+        
+        // 带自定义快捷键的键盘事件处理
+        function handleKeyDownWithCustomShortcuts(e) {
+            // 只在任务界面启用快捷键
+            if (taskSection.classList.contains('hidden')) return;
+            
+            const categoriesSettings = getCategoriesSettings();
+            const enabledCategories = categoriesSettings.filter(cat => cat.enabled);
+            
+            // 检查是否是自定义快捷键
+            for (let i = 0; i < enabledCategories.length; i++) {
+                if (e.key == enabledCategories[i].shortcut) {
+                    classifyCurrentImage(enabledCategories[i].name);
+                    return;
+                }
+            }
+            
+            // 处理其他快捷键
+            switch(e.key) {
+                case '+':
+                case '=':
+                    if (e.ctrlKey) zoomIn();
+                    break;
+                case '-':
+                    if (e.ctrlKey) zoomOut();
+                    break;
+                case '0':
+                    if (e.ctrlKey) resetView();
+                    break;
+                case 'z':
+                case 'Z':
+                    if (e.ctrlKey) undo();
+                    break;
+                case 'ArrowLeft':
+                    offsetX += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowRight':
+                    offsetX -= 40;
+                    applyTransform();
+                    break;
+                case 'ArrowUp':
+                    offsetY += 40;
+                    applyTransform();
+                    break;
+                case 'ArrowDown':
+                    offsetY -= 40;
+                    applyTransform();
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

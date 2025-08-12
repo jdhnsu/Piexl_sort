@@ -1,0 +1,5 @@
+group_num: 2,member_num: 2
+001_001_exl
+001_002_bnv
+002_001_fbv
+002_002_jfm

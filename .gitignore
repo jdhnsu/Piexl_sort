@@ -1,0 +1,17 @@
+# 忽略 ReconstructionPlan.md 文件
+ReconstructionPlan.md
+
+# 忽略 草稿.md 文件
+草稿.md
+
+# 忽略 text_img 目录及其内容
+text_img/
+
+
+# 忽略 .vscode 目录及其内容
+.vscode/
+
+# 忽略 .venv 目录及其内容
+.venv/
+
+client_1/
