@@ -127,3 +127,7 @@ python client_web.py
 ---
 
 > _如需定制功能或遇到问题，欢迎联系作者！_
+
+>_代码70%以下由AI编写，请自行判断!，如果介意AI生成的代码，立即停止使用!_  
+
+>_感谢[OpenAI](https://openai.com/) ,[copilot](https://copilot.github.com/) ,[Qianwen LLM](https://www.qianwen.com/) ,[fittencoder](https://fittencoder.com/) 提供免费AI服务支持！_
