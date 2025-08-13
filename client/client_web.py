@@ -8,6 +8,7 @@ import base64
 from datetime import datetime
 import re
 import numpy as np
+import threading
 
 app = Flask(__name__)
 
@@ -17,6 +18,10 @@ TOKEN = ""
 TASK_DATA = {}
 CURRENT_IMAGE_INDEX = 0
 CLASSIFIED_DATA = {}
+
+# 添加预加载缓存
+PRELOAD_CACHE = {}
+PRELOAD_CACHE_SIZE = 2  # 缓存大小
 
 # 创建数据目录
 DATA_DIR = "data"
@@ -103,6 +108,53 @@ def save_classified_data():
             json.dump(CLASSIFIED_DATA, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"保存分类数据时出错: {e}")
+
+def preload_image(image_name):
+    """预加载图片到缓存"""
+    global PRELOAD_CACHE
+    
+    # 如果已经在缓存中，直接返回
+    if image_name in PRELOAD_CACHE:
+        return PRELOAD_CACHE[image_name]
+    
+    try:
+        # 从服务器获取图片
+        image_response = requests.get(f"{SERVER_URL}/get_image?filename={image_name}&token={TOKEN}")
+        if image_response.status_code == 200 and image_response.content:
+            # 添加到缓存
+            PRELOAD_CACHE[image_name] = image_response.content
+            
+            # 如果缓存超过限制大小，移除最旧的条目
+            if len(PRELOAD_CACHE) > PRELOAD_CACHE_SIZE:
+                # 移除第一个（最旧的）条目
+                oldest_key = next(iter(PRELOAD_CACHE))
+                del PRELOAD_CACHE[oldest_key]
+            
+            return image_response.content
+    except Exception as e:
+        print(f"预加载图片时出错: {e}")
+    
+    return None
+
+def get_image_data(image_name):
+    """获取图片数据，优先从缓存获取"""
+    global PRELOAD_CACHE
+    
+    # 如果在缓存中，直接返回并移除缓存
+    if image_name in PRELOAD_CACHE:
+        image_data = PRELOAD_CACHE[image_name]
+        del PRELOAD_CACHE[image_name]
+        return image_data
+    
+    # 否则从服务器获取
+    try:
+        image_response = requests.get(f"{SERVER_URL}/get_image?filename={image_name}&token={TOKEN}")
+        if image_response.status_code == 200:
+            return image_response.content
+    except Exception as e:
+        print(f"获取图片时出错: {e}")
+    
+    return None
 
 def process_image(image_data, layout_mode="row"):
     """
@@ -259,6 +311,16 @@ def get_current_image():
         return jsonify({'status': 'completed', 'message': '所有图片处理完成'}), 200
     
     current_image = image_files[CURRENT_IMAGE_INDEX]
+    
+    # 预加载下一张图片（如果存在）
+    next_index = CURRENT_IMAGE_INDEX + 1
+    if next_index < len(image_files):
+        next_image = image_files[next_index]
+        # 在后台线程中预加载下一张图片
+        preload_thread = threading.Thread(target=preload_image, args=(next_image,))
+        preload_thread.daemon = True
+        preload_thread.start()
+    
     return jsonify({'status': 'ok', 'image': current_image, 'index': CURRENT_IMAGE_INDEX, 'total': len(image_files)})
 
 @app.route('/process_image/<image_name>')
@@ -267,17 +329,13 @@ def process_image_endpoint(image_name):
         # 获取布局模式参数，默认为row
         layout_mode = request.args.get('layout', 'row')
         
-        # 从服务器获取图片
-        image_response = requests.get(f"{SERVER_URL}/get_image?filename={image_name}&token={TOKEN}")
-        if image_response.status_code != 200:
-            return jsonify({'status': 'error', 'message': f'获取图片失败，状态码: {image_response.status_code}'}), 404
-        
-        # 检查响应内容
-        if not image_response.content:
-            return jsonify({'status': 'error', 'message': '图片内容为空'}), 500
+        # 获取图片数据（优先从缓存获取）
+        image_data = get_image_data(image_name)
+        if not image_data:
+            return jsonify({'status': 'error', 'message': '获取图片失败'}), 404
         
         # 处理图片，根据布局模式选择不同的处理方式
-        processed_image, foreground_ratio = process_image(image_response.content, layout_mode)
+        processed_image, foreground_ratio = process_image(image_data, layout_mode)
         if not processed_image:
             return jsonify({'status': 'error', 'message': '图片处理失败'}), 500
         

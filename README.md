@@ -96,7 +96,119 @@ python client_web.py
 
 ## 服务器端部署
 
-服务器端部署请参考 `server/` 目录下的说明文档。
+服务器端采用Flask框架构建，负责任务分发、进度跟踪和结果收集。
+
+### 部署步骤
+
+1. 安装依赖：
+```bash
+cd server
+pip install flask
+```
+
+2. 准备任务数据：
+- 将用户任务文件放入[client_task_list/](file:///c:/Users/Administrator/Desktop/Piexl_sort/server/client_task_list)目录，文件名格式为`task_{token}.json`
+- 配置[token.txt](file://c:/Users/Administrator/Desktop/Piexl_sort/server/token.txt)文件，每行一个有效token
+
+3. 启动服务器：
+```bash
+# 开发模式（Flask内置服务器）
+python server_online.py
+
+# 生产模式（自动检测环境并推荐合适的服务器）
+python server_online.py prod
+
+# 明确指定使用Waitress（跨平台兼容）
+python server_online.py waitress
+
+# 明确指定使用Gunicorn（仅Linux/macOS）
+python server_online.py gunicorn
+```
+
+服务器默认运行在 `http://localhost:5000`
+
+### 跨平台部署方案
+
+本项目支持在Windows、Linux和macOS上部署，不同平台推荐使用不同的WSGI服务器以获得最佳性能：
+
+#### Windows平台
+推荐使用Waitress，它是纯Python实现，与Windows兼容性最好：
+```bash
+# 安装
+pip install waitress
+
+# 运行
+python server_online.py prod
+# 或明确指定
+python server_online.py waitress
+```
+
+#### Linux/macOS平台
+推荐使用Gunicorn，它是专门为Unix系统设计的高性能WSGI服务器：
+```bash
+# 安装
+pip install gunicorn
+
+# 运行
+python server_online.py prod
+# 或明确指定
+python server_online.py gunicorn
+
+# 也可以直接使用gunicorn命令
+gunicorn -w 4 -b 0.0.0.0:5000 server_online:app
+```
+
+### 生产环境部署选项
+
+对于生产环境，建议使用以下更高效的服务器：
+
+#### 1. Waitress（Windows推荐，跨平台兼容）
+Waitress是一个纯Python编写的WSGI服务器，具有以下特点：
+- 跨平台兼容性好，特别适合Windows环境
+- 配置简单，易于部署
+- 性能优于Flask内置开发服务器
+- 支持多线程处理并发请求
+
+```bash
+pip install waitress
+python server_online.py prod
+```
+
+#### 2. Gunicorn（Linux/macOS推荐）
+Gunicorn是专门为Unix系统设计的高性能WSGI服务器，具有以下特点：
+- 在Unix系统上性能优异
+- 支持多种工作模式（同步、异步）
+- 配置选项丰富
+- 易于与Nginx等反向代理集成
+
+```bash
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 server_online:app
+```
+
+#### 3. uWSGI
+uWSGI是一个功能齐全的应用服务器，适用于复杂的生产环境：
+```bash
+pip install uwsgi
+# 创建uwsgi.ini配置文件后运行
+uwsgi --ini uwsgi.ini
+```
+
+
+### 目录结构说明
+
+- `client_task_list/` - 用户任务文件目录（每个用户一个任务文件）
+- `client_classified` - 用户分类结果目录
+- `client_progress/` - 用户进度记录目录
+- `json_data/` - 服务器数据目录
+
+### API接口说明
+
+- `POST /auth` - Token验证接口
+- `GET /get_task` - 获取用户任务接口
+- `GET /get_image` - 获取图片数据接口
+- `POST /upload_progress` - 上传进度接口
+- `POST /upload_classified` - 上传分类结果接口
 
 ---
 

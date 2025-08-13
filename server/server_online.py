@@ -251,7 +251,62 @@ def undo_last_classification():
 def run_server():
     load_server_progress()
     threading.Thread(target=auto_print_progress, daemon=True).start()
-    app.run(host="0.0.0.0", port=4555, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)
+
+def run_production_server(server_type="waitress"):
+    """使用生产级WSGI服务器运行服务器"""
+    load_server_progress()
+    threading.Thread(target=auto_print_progress, daemon=True).start()
+    
+    if server_type == "waitress":
+        try:
+            from waitress import serve
+            print("使用 Waitress 服务器运行...")
+            print("服务器正在 http://0.0.0.0:5000 上运行")
+            serve(app, host='0.0.0.0', port=5000, threads=8)
+        except ImportError:
+            print("未安装 Waitress，请运行: pip install waitress")
+            print("回退到 Flask 开发服务器")
+            run_server()
+    elif server_type == "gunicorn":
+        # Gunicorn需要在命令行启动，这里只提供提示信息
+        print("请在命令行运行以下命令启动Gunicorn服务器:")
+        print("gunicorn -w 4 -b 0.0.0.0:5000 server_online:app")
+        return
+    else:
+        print(f"不支持的服务器类型: {server_type}")
+        print("回退到 Flask 开发服务器")
+        run_server()
+
+def check_environment():
+    """检查运行环境并推荐合适的服务器"""
+    import platform
+    system = platform.system().lower()
+    
+    print(f"检测到运行环境: {system}")
+    
+    if system == "windows":
+        print("推荐使用 Waitress 服务器 (pip install waitress)")
+        return "waitress"
+    elif system in ["linux", "darwin"]:  # darwin是macOS
+        print("推荐使用 Gunicorn 服务器 (pip install gunicorn)")
+        return "gunicorn"
+    else:
+        print("未知系统，使用 Flask 开发服务器")
+        return "flask"
 
 if __name__ == "__main__":
-    run_server()
+    # 检查命令行参数
+    import sys
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ["prod", "production"]:
+            # 根据环境自动选择服务器
+            recommended_server = check_environment()
+            run_production_server(recommended_server)
+        elif sys.argv[1] in ["waitress", "gunicorn"]:
+            run_production_server(sys.argv[1])
+        else:
+            print("用法: python server_online.py [prod|waitress|gunicorn]")
+            run_server()
+    else:
+        run_server()
